@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: {{ include "kafka.broker.name" . }}
+    app.kubernetes.io/component: broker
+    app.kubernetes.io/part-of: kafka
+  name: {{ include "kafka.broker.name" . }}
+  namespace: {{ include "kafka.namespace" . }}
+spec:
+  podManagementPolicy: Parallel
+  replicas: {{ .Values.broker.replicaCount }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: {{ include "kafka.broker.name" . }}
+      app.kubernetes.io/component: broker
+      app.kubernetes.io/part-of: kafka
+  serviceName: {{ printf "%s-headless" (include "kafka.broker.name" .) }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "kafka.broker.name" . }}
+        app.kubernetes.io/component: broker
+        app.kubernetes.io/part-of: kafka
+    spec:
+      serviceAccountName: {{ include "kafka.serviceAccountName" . }}
+      containers:
+        - name: {{ include "kafka.broker.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: POD_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+            - name: KAFKA_NODE_ID
+              value: 100$(POD_INDEX)
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT://0.0.0.0:{{ .Values.broker.port }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT://$(POD_NAME).{{ include "kafka.broker.name" . }}-headless.{{ include "kafka.namespace" . }}.svc.cluster.local:{{ .Values.broker.port }}
+            - name: CLUSTER_ID
+              value: {{ .Values.clusterID }}
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: {{ include "kafka.controller.voters" . }}
+            - name: KAFKA_LOG_DIRS
+              value: "/tmp/logs"
+            - name: KAFKA_PROCESS_ROLES
+              value: 'broker'
+            - name: JMX_PORT
+              value: {{ .Values.monitoring.jmx.kafkaJmxPort | quote }}
+            - name: KAFKA_JVM_PERFORMANCE_OPTS
+              value: {{ .Values.broker.jvmOpts.jvmPerformanceOpts | quote }}
+            - name: KAFKA_HEAP_OPTS
+              value: {{ .Values.broker.jvmOpts.heapOpts | quote }}
+            {{- if .Values.broker.extraEnv }}
+            {{- range $k,$v := .Values.broker.extraEnv }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.broker.port }}
+              name: tcp-kafka-int
+              protocol: TCP
+          {{ if .Values.broker.resources }}
+          resources:
+            {{- toYaml .Values.broker.resources | nindent 12 }}
+          {{ end }}
+          volumeMounts:
+            {{- if .Values.broker.persistence.enabled }}
+            - name: logs
+              mountPath: "/tmp/logs"
+            {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            # readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsUser: 1000
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+
+        - name: jmx-exporter
+          image: {{ .Values.monitoring.jmx.image }}
+          imagePullPolicy: IfNotPresent
+          command:
+          - java
+          args:
+          - -XX:MaxRAMPercentage=100
+          - -XshowSettings:vm
+          - -jar
+          - jmx_prometheus_httpserver.jar
+          - {{ .Values.monitoring.jmx.containerPort | quote }}
+          - /etc/jmx-kafka/jmx-kafka-prometheus.yml # defined in config map
+          ports:
+            - name: jmx-metrics
+              containerPort: {{ .Values.monitoring.jmx.containerPort }}
+          volumeMounts:
+            - name: jmx-config
+              mountPath: /etc/jmx-kafka
+
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: config
+        - name: jmx-config
+          configMap:
+            name: {{ printf "%s-jmx-configuration" (include "kafka.names.fullname" .) }}
+  {{- if .Values.broker.persistence.enabled }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: logs
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{ if .Values.broker.persistence.storageClass }}
+        storageClassName: {{ .Values.broker.persistence.storageClass }}
+        {{ end }}
+        resources:
+          requests:
+            storage: {{ .Values.broker.persistence.size | quote }}
+  {{- end }}
+  updateStrategy:
+    type: RollingUpdate

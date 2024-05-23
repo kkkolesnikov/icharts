@@ -1,0 +1,39 @@
+{{- $brokerName := include "kafka.broker.name" . -}}
+{{- $namespace := include "kafka.namespace" . -}}
+{{- $brokerPort := int $.Values.broker.port -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-exporter" ((include "kafka.names.fullname" .)) }}
+  namespace: {{ include "kafka.namespace" . }}
+  labels:
+    app: {{ printf "%s-exporter" ((include "kafka.names.fullname" .)) }}
+    app.kubernetes.io/component: cluster-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ printf "%s-exporter" ((include "kafka.names.fullname" .)) }}
+      app.kubernetes.io/component: cluster-metrics
+
+  template:
+    metadata:
+      labels:
+        app: {{ printf "%s-exporter" ((include "kafka.names.fullname" .)) }}
+        app.kubernetes.io/component: cluster-metrics
+    spec:
+      serviceAccountName: {{ include "kafka.serviceAccountName" . }}
+      containers:
+      - name: kafka-exporter
+        image: "{{ .Values.monitoring.exporter.image }}"
+        imagePullPolicy: IfNotPresent
+        args:
+        {{- range $i := until (int .Values.broker.replicaCount) }}
+        - '--kafka.server={{ printf "%s-%d.%s-headless.%s.svc.cluster.local:%d" $brokerName (int $i) $brokerName $namespace $brokerPort }}'
+        {{- end }}
+        - '--web.listen-address=:{{ .Values.monitoring.exporter.containerPort }}'
+        - '--kafka.version={{ .Chart.AppVersion }}'
+        ports:
+        - name: exporter-port
+          containerPort: {{ .Values.monitoring.exporter.containerPort }}
+          protocol: TCP

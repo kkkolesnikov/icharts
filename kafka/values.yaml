@@ -1,0 +1,167 @@
+# Default values for kafka-cluster.
+
+# cluster ID
+clusterID: "4L6g3nShT-eMCtK--X86sw"
+
+# image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+image:
+  # Image repository
+  repository: apache/kafka
+  # Image pull policy
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "3.7.0"
+
+nameOverride: ""
+fullnameOverride: ""
+
+namespace:
+  create: true
+  name: "kafka"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+controller:
+  # TCP port for inter-cluster communication with controllers. Used for voting, brokers management etc
+  port: 9093
+
+  # number of controllers to create.
+  replicaCount: 1
+
+  # controller logs persistence layer. Will be mounted to PODs as KAFKA_LOG_DIRS
+  # if not enabled and existingClaim is not specified, will use directories inside container.
+  persistence:
+
+    # if enabled and existingClaim is not provided, will claim a storage based on storageClass and size.
+    enabled: true
+
+    # storage class to be used in PersistentVolumeClaim.
+    # If not specified, default storageClass configured in K8S will be used.
+    storageClass: ""
+
+    # storage size to be claimed.
+    # Please note that size claim can be ignored by storage provider (e.g. LocalStorageProvider)
+    size: 5Gi
+
+  jvmOpts:
+    # heap tuning options to be passed to controller containers as KAFKA_HEAP_OPTS env variable,
+    # e.g. -Xmx6g -Xms6g
+    heapOpts: ""
+    # jvm performance tuning options (e.g. GC) to be passed to controller containers as KAFKA_JVM_PERFORMANCE_OPTS env variable,
+    # e.g. (LinkedIn example)
+    # -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M
+    #  -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80 -XX:+ExplicitGCInvokesConcurrent
+    jvmPerformanceOpts: "-XX:+UseG1GC"
+
+
+  # Extra environment variable to be passed to controller containers
+  extraEnv: {}
+  #    KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+  #    KAFKA_NUM_PARTITIONS: 6
+  #    KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+
+
+  # controller resources
+  resources: {}
+#    limits:
+#      cpu: "1"
+#      memory: 1400Mi
+#    requests:
+#      cpu: 250m
+#      memory: 512Mi
+
+
+broker:
+
+  # number of brokers to create.
+  replicaCount: 1
+
+  # TCP port for inter-cluster communication with Kafka cluster
+  port: 9092
+
+  # controller logs persistence layer. Will be mounted to PODs as KAFKA_LOG_DIRS
+  # if not enabled and existingClaim is not specified, will use directories inside container.
+  persistence:
+
+    # if enabled, will claim a storage based on storageClass and size.
+    enabled: true
+
+    # storage class to be used in PersistentVolumeClaim.
+    # If not specified, default will be used.
+    storageClass: ""
+
+    # storage size to be claimed.
+    # Please note that size claim can be ignored by storage provider (e.g. LocalStorageProvider)
+    size: 8Gi
+
+  jvmOpts:
+    # heap tuning options to be passed to broker containers as KAFKA_HEAP_OPTS env variable,
+    # e.g. -Xmx6g -Xms6g
+    heapOpts: ""
+
+    # jvm performance tuning options (e.g. GC) to be passed to broker containers as KAFKA_JVM_PERFORMANCE_OPTS env variable,
+    # e.g. (LinkedIn example)
+    # -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M
+    #  -XX:MinMetaspaceFreeRatio=50 -XX:MaxMetaspaceFreeRatio=80 -XX:+ExplicitGCInvokesConcurrent
+    jvmPerformanceOpts: "-XX:+UseG1GC"
+
+  # Extra environment variable to be passed to broker containers
+  extraEnv: {}
+#    KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+#    KAFKA_NUM_PARTITIONS: 6
+#    KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+
+  # broker resources
+  resources: {}
+#    limits:
+#      cpu: "1"
+#      memory: 1400Mi
+#    requests:
+#      cpu: 250m
+#      memory: 512Mi
+
+
+monitoring:
+
+  # JMX exporter container is started along with kafka container as a single K8S POD.
+  # It runs as an HTTP Server that collects Kafka JMX metrics and exports them.
+  # Bitnami's jmx-exporter is used, that is essentially a wrapper over P8S JMX Exporter: https://github.com/prometheus/jmx_exporter
+  # Please consult the latter docs for the list of configuration options.
+  #
+  # JMX Exporter container is configured via ConfigMap, mounted to the container as a volume.
+  #
+  # P8S ServiceMonitor (CRD) is started to collect metrics from JMX Service and store them in P8S.
+  # Metrics are collected per-pod, so that brokers&controllers can be scaled dynamically.
+
+  jmx:
+    image: bitnami/jmx-exporter:0.20.0
+
+    # port to be used as JMX_PORT in kafka containers
+    # JMX container will use this port to establish JMX connection
+    kafkaJmxPort: 9998
+
+    # internal http port exposed by JMX exporter container
+    containerPort: 5556
+
+    # HTTP port exposed cluster-wide by JMX exporter HTTP server that exports kafka's JMX metrics
+    # Used by P8S ServiceMonitor to collect metrics
+    httpPort: 5556
+
+  # https://github.com/danielqsj/kafka_exporter
+  exporter:
+    image: danielqsj/kafka-exporter:v1.7.0
+
+    # container port
+    containerPort: 9308
+
+    # service port
+    httpPort: 9308

@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ printf "%s-exporter-monitor" (include "kafka.names.fullname" .) }}
+  namespace: {{ include "kafka.namespace" . }}
+  labels:
+    app.kubernetes.io/component: cluster-metrics
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: metrics
+  endpoints:
+    - port: kafka-exporter-http-port
+      path: "/metrics"
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: true
+  namespaceSelector:
+    matchNames:
+      -  {{ include "kafka.namespace" . }}

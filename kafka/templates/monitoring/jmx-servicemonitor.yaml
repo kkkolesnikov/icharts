@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ printf "%s-jmx-metrics-monitor" (include "kafka.names.fullname" .) }}
+  namespace: {{ include "kafka.namespace" . }}
+  labels:
+    app.kubernetes.io/component: cluster-metrics
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: metrics
+  endpoints:
+    - port: kafka-jmx-http-metrics
+      path: "/"
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: true
+  namespaceSelector:
+    matchNames:
+      -  {{ include "kafka.namespace" . }}

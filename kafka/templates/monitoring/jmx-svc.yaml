@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: metrics
+  name: {{ printf  "%s-jmx-metrics" ((include "kafka.names.fullname" . )) }}
+  namespace: {{ include "kafka.namespace" . }}
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: kafka-jmx-http-metrics
+      port: {{ .Values.monitoring.jmx.httpPort }}
+      protocol: TCP
+      targetPort: jmx-metrics
+  selector:
+    app.kubernetes.io/part-of: "kafka"
+  sessionAffinity: None
+  type: ClusterIP

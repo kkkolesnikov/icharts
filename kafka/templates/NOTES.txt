@@ -1,0 +1,33 @@
+{{ .Chart.Name }}:{{ .Chart.Version }} (appVersion= {{ .Chart.AppVersion }}) has been installed in `{{ include "kafka.namespace" . }}` namespace.
+
+Controllers:
+- replicas: {{ .Values.controller.replicaCount }}
+- hosts:
+    {{ $voters := split "," (include "kafka.controller.voters" .) -}}
+    {{- range $_, $voter := $voters -}}
+    {{ $m := split "@" ($voter) }}
+    {{ $m._0 }}: {{ $m._1 }}
+    {{ end }}
+{{- if .Values.controller.persistence.enabled }}
+- storageClass: {{- if .Values.controller.persistence.storageClass }} {{ .Values.controller.persistence.storageClass | quote }} {{else}} "default" {{ end }}
+  storageSize: {{ .Values.controller.persistence.size }}
+{{ end }}
+- monitoring
+    jmx: metrics exported on {{ .Values.monitoring.jmx.httpPort }} cluster port
+
+Brokers:
+- replicas: {{ .Values.broker.replicaCount }}
+- hosts:
+  {{ $releaseNamespace := include "kafka.namespace" . }}
+  {{ $brokerName := include "kafka.broker.name" . -}}
+  {{ range $i := until (int .Values.broker.replicaCount) -}}
+  {{ $nodeId := $i -}}
+  {{ printf "%s-%d.%s-headless.%s.svc.cluster.local:%d" $brokerName (int $i) $brokerName $releaseNamespace (int $.Values.broker.port ) }}
+  {{ end }}
+{{- if .Values.broker.persistence.enabled }}
+- storageClass: {{- if .Values.broker.persistence.storageClass }} {{ .Values.broker.persistence.storageClass | quote }} {{else}} "default" {{ end }}
+  storageSize: {{ .Values.broker.persistence.size }}
+{{ end }}
+- monitoring
+    jmx: metrics exported on {{ .Values.monitoring.jmx.httpPort }} cluster port
+    kafka-exporter: kafka metrics exposed on {{ .Values.monitoring.exporter.httpPort }} cluster port
