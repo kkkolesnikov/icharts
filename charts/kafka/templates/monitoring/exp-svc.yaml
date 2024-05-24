@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -22,3 +23,4 @@ spec:
     app: {{ printf "%s-exporter" ((include "kafka.names.fullname" .)) }}
   type: ClusterIP
   sessionAffinity: None
+{{ end }}

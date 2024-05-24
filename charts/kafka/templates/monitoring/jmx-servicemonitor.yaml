@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -18,3 +19,4 @@ spec:
   namespaceSelector:
     matchNames:
       -  {{ include "kafka.namespace" . }}
+{{ end }}

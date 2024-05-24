@@ -102,6 +102,7 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
 
+        {{- if .Values.monitoring.enabled }}
         - name: jmx-exporter
           image: {{ .Values.monitoring.jmx.image }}
           imagePullPolicy: IfNotPresent
@@ -124,6 +125,7 @@ spec:
           volumeMounts:
             - name: jmx-config
               mountPath: /etc/jmx-kafka
+        {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

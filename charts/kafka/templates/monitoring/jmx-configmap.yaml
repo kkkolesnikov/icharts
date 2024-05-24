@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -55,3 +56,4 @@ data:
       name: kafka_network_$1_$2_$3
     - pattern : kafka.network<type=(RequestChannel), name=(.+)><>(Count|Value)
       name: kafka_network_$1_$2_$3
+{{ end }}

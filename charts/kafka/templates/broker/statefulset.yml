@@ -105,6 +105,7 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
 
+        {{- if .Values.monitoring.enabled }}
         - name: jmx-exporter
           image: {{ .Values.monitoring.jmx.image }}
           imagePullPolicy: IfNotPresent
@@ -127,7 +128,7 @@ spec:
           resources:
             {{- toYaml .Values.monitoring.jmx.resources | nindent 12 }}
           {{- end }}
-
+        {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

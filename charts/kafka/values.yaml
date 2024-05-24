@@ -131,6 +131,7 @@ broker:
 
 
 monitoring:
+  enabled: false
 
   # JMX exporter container is started along with kafka container as a single K8S POD.
   # It runs as an HTTP Server that collects Kafka JMX metrics and exports them.

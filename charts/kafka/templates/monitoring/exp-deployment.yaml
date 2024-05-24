@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.enabled }}
 {{- $brokerName := include "kafka.broker.name" . -}}
 {{- $namespace := include "kafka.namespace" . -}}
 {{- $brokerPort := int $.Values.broker.port -}}
@@ -37,3 +38,4 @@ spec:
         - name: exporter-port
           containerPort: {{ .Values.monitoring.exporter.containerPort }}
           protocol: TCP
+{{ end }}
