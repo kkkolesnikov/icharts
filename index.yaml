@@ -3,6 +3,17 @@ entries:
   kafka:
   - apiVersion: v2
     appVersion: 3.7.0
+    created: "2024-05-24T10:13:45.959514598Z"
+    description: A Helm chart for Kafka Cluster with Kraft on Kubernetes
+    digest: 0aed6135868b0629c3543b8b3394df6c6a071c69a1ae12e3bd232a0eb3e3e767
+    kubeVersion: '>=1.29.0'
+    name: kafka
+    type: application
+    urls:
+    - https://github.com/kkkolesnikov/icharts/releases/download/kafka-0.1.2/kafka-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 3.7.0
     created: "2024-05-24T09:44:54.118909361Z"
     description: A Helm chart for Kafka Cluster with Kraft on Kubernetes
     digest: d2ebf2ec26cf04220af184873ba992a4e06a70052a639f9170c9dd6158515cda
@@ -23,4 +34,4 @@ entries:
     urls:
     - https://kkkolesnikov.github.io/icharts/kafka-0.1.0.tgz
     version: 0.1.0
-generated: "2024-05-24T09:44:54.118922275Z"
+generated: "2024-05-24T10:13:45.959555755Z"
