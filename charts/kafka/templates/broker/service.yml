@@ -15,10 +15,10 @@ spec:
     - IPv4
   ipFamilyPolicy: SingleStack
   ports:
-    - name: tcp-kafka-int
+    - name: tcp-broker
       port: {{ .Values.broker.port }}
       protocol: TCP
-      targetPort: tcp-kafka-int
+      targetPort: tcp-broker
   selector:
     app: {{ include "kafka.broker.name" . }}
   sessionAffinity: None

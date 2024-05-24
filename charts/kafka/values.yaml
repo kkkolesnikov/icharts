@@ -156,6 +156,15 @@ monitoring:
     # Used by P8S ServiceMonitor to collect metrics
     httpPort: 5556
 
+    # JMX Container resources
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
   # https://github.com/danielqsj/kafka_exporter
   exporter:
     image: danielqsj/kafka-exporter:v1.7.0
@@ -165,3 +174,21 @@ monitoring:
 
     # service port
     httpPort: 9308
+
+    # Exporter container resources
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+  # Configuration of service monitors scraping metrics from both JMX & Kafka exporters
+  serviceMonitor:
+
+    # metrics scrape interval
+    scrapeInterval: 30s
+
+    # scrape timeout
+    scrapeTimeout: 10s

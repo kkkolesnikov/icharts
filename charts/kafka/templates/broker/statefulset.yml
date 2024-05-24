@@ -75,8 +75,16 @@ spec:
             {{- end }}
           ports:
             - containerPort: {{ .Values.broker.port }}
-              name: tcp-kafka-int
+              name: tcp-broker
               protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: "tcp-broker"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 15
+            successThreshold: 1
           {{ if .Values.broker.resources }}
           resources:
             {{- toYaml .Values.broker.resources | nindent 12 }}
@@ -115,6 +123,10 @@ spec:
           volumeMounts:
             - name: jmx-config
               mountPath: /etc/jmx-kafka
+          {{- if .Values.monitoring.jmx.resources }}
+          resources:
+            {{- toYaml .Values.monitoring.jmx.resources | nindent 12 }}
+          {{- end }}
 
       dnsPolicy: ClusterFirst
       restartPolicy: Always
@@ -137,9 +149,9 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        {{ if .Values.broker.persistence.storageClass }}
+        {{- if .Values.broker.persistence.storageClass }}
         storageClassName: {{ .Values.broker.persistence.storageClass }}
-        {{ end }}
+        {{- end }}
         resources:
           requests:
             storage: {{ .Values.broker.persistence.size | quote }}

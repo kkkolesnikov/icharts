@@ -14,10 +14,10 @@ spec:
     - IPv4
   ipFamilyPolicy: SingleStack
   ports:
-    - name: tcp-kafka-ctrl
+    - name: tcp-controller
       port: {{ .Values.controller.port }}
       protocol: TCP
-      targetPort: tcp-kafka-ctrl
+      targetPort: tcp-controller
   selector:
     app: {{ include "kafka.controller.name" . }}
   sessionAffinity: None

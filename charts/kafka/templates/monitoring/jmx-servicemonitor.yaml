@@ -12,8 +12,8 @@ spec:
   endpoints:
     - port: kafka-jmx-http-metrics
       path: "/"
-      interval: 30s
-      scrapeTimeout: 10s
+      interval: {{ .Values.monitoring.serviceMonitor.scrapeInterval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
       honorLabels: true
   namespaceSelector:
     matchNames:
