@@ -42,19 +42,21 @@ spec:
               value: 100$(POD_INDEX)
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
+#            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+#              value: "INTERNAL"
             - name: KAFKA_LISTENERS
-              value: PLAINTEXT://0.0.0.0:{{ .Values.broker.port }}
+              value: PLAINTEXT://0.0.0.0:{{ .Values.broker.port }},EXTERNAL://:19092
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: PLAINTEXT://$(POD_NAME).{{ include "kafka.broker.name" . }}-headless.{{ include "kafka.namespace" . }}.svc.cluster.local:{{ .Values.broker.port }}
+              value: PLAINTEXT://$(POD_NAME).{{ include "kafka.broker.name" . }}-headless.{{ include "kafka.namespace" . }}.svc.cluster.local:{{ .Values.broker.port }},EXTERNAL://$(HOST_IP):3000$(POD_INDEX)
             - name: CLUSTER_ID
               value: {{ .Values.clusterID }}
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
               value: {{ include "kafka.controller.voters" . }}
             - name: KAFKA_LOG_DIRS
@@ -67,6 +69,10 @@ spec:
               value: {{ .Values.broker.jvmOpts.jvmPerformanceOpts | quote }}
             - name: KAFKA_HEAP_OPTS
               value: {{ .Values.broker.jvmOpts.heapOpts | quote }}
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
             {{- if .Values.broker.extraEnv }}
             {{- range $k,$v := .Values.broker.extraEnv }}
             - name: {{ $k }}
@@ -76,6 +82,9 @@ spec:
           ports:
             - containerPort: {{ .Values.broker.port }}
               name: tcp-broker
+              protocol: TCP
+            - containerPort: 19092
+              name: tcp-broker-ext
               protocol: TCP
           readinessProbe:
             tcpSocket:

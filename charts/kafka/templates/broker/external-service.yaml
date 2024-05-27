@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ include "kafka.broker.name" . }}
+    app.kubernetes.io/component: broker
+    app.kubernetes.io/part-of: kafka
+  name:  {{ include "kafka.broker.name" . }}-nodeport-0
+  namespace:  {{ include "kafka.namespace" . }}
+spec:
+  type: NodePort
+  ports:
+    - name: tcp-broker-ext
+      port: 19092
+      targetPort: 19092
+      nodePort: 30000
+      protocol: TCP
+  selector:
+    app: {{ include "kafka.broker.name" . }}
+    statefulset.kubernetes.io/pod-name: {{ include "kafka.broker.name" . }}-0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ include "kafka.broker.name" . }}
+    app.kubernetes.io/component: broker
+    app.kubernetes.io/part-of: kafka
+  name:  {{ include "kafka.broker.name" . }}-nodeport-1
+  namespace:  {{ include "kafka.namespace" . }}
+spec:
+  type: NodePort
+  ports:
+    - name: tcp-broker-ext
+      port: 19092
+      targetPort: 19092
+      nodePort: 30001
+      protocol: TCP
+  selector:
+    app: {{ include "kafka.broker.name" . }}
+    statefulset.kubernetes.io/pod-name: {{ include "kafka.broker.name" . }}-1

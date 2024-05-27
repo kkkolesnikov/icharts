@@ -42,7 +42,7 @@ controller:
   persistence:
 
     # if enabled and existingClaim is not provided, will claim a storage based on storageClass and size.
-    enabled: true
+    enabled: false
 
     # storage class to be used in PersistentVolumeClaim.
     # If not specified, default storageClass configured in K8S will be used.
@@ -83,7 +83,7 @@ controller:
 broker:
 
   # number of brokers to create.
-  replicaCount: 1
+  replicaCount: 2
 
   # TCP port for inter-cluster communication with Kafka cluster
   port: 9092
@@ -93,7 +93,7 @@ broker:
   persistence:
 
     # if enabled, will claim a storage based on storageClass and size.
-    enabled: true
+    enabled: false
 
     # storage class to be used in PersistentVolumeClaim.
     # If not specified, default will be used.
