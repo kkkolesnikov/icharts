@@ -67,6 +67,10 @@ spec:
               value: {{ .Values.broker.jvmOpts.jvmPerformanceOpts | quote }}
             - name: KAFKA_HEAP_OPTS
               value: {{ .Values.broker.jvmOpts.heapOpts | quote }}
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: {{ min 3 .Values.controller.replicaCount | quote }}
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: {{ min 3 .Values.controller.replicaCount | quote }}
             {{- if .Values.broker.extraEnv }}
             {{- range $k,$v := .Values.broker.extraEnv }}
             - name: {{ $k }}
