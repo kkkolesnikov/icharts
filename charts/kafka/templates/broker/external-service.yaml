@@ -1,0 +1,30 @@
+{{- if .Values.broker.externalAccess.enabled }}
+{{- $brokerName := include "kafka.broker.name" . -}}
+{{- $namespace := include "kafka.namespace" . -}}
+{{- $clusterPort := .Values.broker.externalAccess.port }}
+{{- $nodePortPrefix := int .Values.broker.externalAccess.nodePortPrefix }}
+{{- range $podId := until (int .Values.broker.replicaCount) }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ $brokerName }}
+    app.kubernetes.io/component: broker
+    app.kubernetes.io/part-of: kafka
+  name:  {{ printf "%s-nodeport-%d" $brokerName (int $podId) }}
+  namespace:  {{ $namespace }}
+spec:
+  type: NodePort
+  ports:
+    - name: tcp-broker
+      port: {{ $clusterPort }}
+      nodePort: {{ printf "%d%d" $nodePortPrefix $podId | int }}
+      protocol: TCP
+      targetPort: tcp-broker-ext
+
+  selector:
+    app: {{ $brokerName }}
+    statefulset.kubernetes.io/pod-name: {{ printf "%s-%d" $brokerName (int $podId) }}
+---
+{{- end }}
+{{- end }}

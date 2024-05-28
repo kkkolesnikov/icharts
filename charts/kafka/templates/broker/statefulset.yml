@@ -42,19 +42,21 @@ spec:
               value: 100$(POD_INDEX)
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "INTERNAL"
             - name: KAFKA_LISTENERS
-              value: PLAINTEXT://0.0.0.0:{{ .Values.broker.port }}
+              value: {{ include "kafka.listeners" . }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: PLAINTEXT://$(POD_NAME).{{ include "kafka.broker.name" . }}-headless.{{ include "kafka.namespace" . }}.svc.cluster.local:{{ .Values.broker.port }}
+              value: {{ include "kafka.advertised.listeners" . }}
             - name: CLUSTER_ID
               value: {{ .Values.clusterID }}
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+              value: {{ include "listeners.security.protocol.map" . }}
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
               value: {{ include "kafka.controller.voters" . }}
             - name: KAFKA_LOG_DIRS
@@ -81,6 +83,11 @@ spec:
             - containerPort: {{ .Values.broker.port }}
               name: tcp-broker
               protocol: TCP
+            {{- if .Values.broker.externalAccess.enabled }}
+            - containerPort: {{ .Values.broker.externalAccess.port }}
+              name: tcp-broker-ext
+              protocol: TCP
+            {{- end }}
           readinessProbe:
             tcpSocket:
               port: "tcp-broker"
