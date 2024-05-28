@@ -18,13 +18,25 @@ Controllers:
 Brokers:
 - replicas: {{ .Values.broker.replicaCount }}
 - hosts:
-  {{ $releaseNamespace := include "kafka.namespace" . }}
+   * within K8S Cluster Kafka brokers are accessible on hosts:
+  {{- $releaseNamespace := include "kafka.namespace" . }}
   {{ $brokerName := include "kafka.broker.name" . -}}
   {{ range $i := until (int .Values.broker.replicaCount) -}}
-  {{ $nodeId := $i -}}
   {{ printf "%s-%d.%s-headless.%s.svc.cluster.local:%d" $brokerName (int $i) $brokerName $releaseNamespace (int $.Values.broker.port ) }}
   {{ end }}
-{{- if .Values.broker.persistence.enabled }}
+
+  {{- if .Values.broker.externalAccess.enabled }}
+  {{- $ports := list }}
+  {{- $nodePortPrefix := int .Values.broker.externalAccess.nodePortPrefix }}
+  {{- range $podId := until (int .Values.broker.replicaCount) }}
+  {{- $ports = append $ports (printf "%d%d" $nodePortPrefix $podId )}}
+  {{- end }}
+  {{- $portsString := join "," $ports }}
+  * Kafka is exposed on host machines on ports [{{ $portsString }}]
+  and can be accessed on any host and any port: <HOST_IP>:<PORT>
+  {{- end }}
+
+{{ if .Values.broker.persistence.enabled }}
 - storageClass: {{- if .Values.broker.persistence.storageClass }} {{ .Values.broker.persistence.storageClass | quote }} {{else}} "default" {{ end }}
   storageSize: {{ .Values.broker.persistence.size }}
 {{ end }}

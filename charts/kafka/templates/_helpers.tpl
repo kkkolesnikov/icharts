@@ -101,3 +101,46 @@ Controller voters
   {{- join "," $controllerVoters -}}
 {{- end}}
 
+{{/*listeners.security.protocol.map*/}}
+{{- define "listeners.security.protocol.map" }}
+  {{- $protocolMap := list -}}
+  {{- $protocolMap = append $protocolMap "CONTROLLER:PLAINTEXT" }}
+  {{- $protocolMap = append $protocolMap "INTERNAL:PLAINTEXT" }}
+  {{- if .Values.broker.externalAccess.enabled }}
+  {{- $externalListenerMap := printf "%s:%s" .Values.broker.externalAccess.listenerProtocol .Values.broker.externalAccess.kafkaProtocol }}
+  {{- $protocolMap = append $protocolMap $externalListenerMap }}
+  {{- end -}}
+  {{- join "," $protocolMap -}}
+{{- end }}
+
+{{/*kafka.listeners*/}}
+{{- define "kafka.listeners" }}
+  {{- $listeners := list -}}
+  {{- $listeners = append $listeners (printf "INTERNAL://0.0.0.0:%d" (int .Values.broker.port)) }}
+  {{- if .Values.broker.externalAccess.enabled }}
+  {{- $externalListener := printf "%s://:%d" .Values.broker.externalAccess.listenerProtocol (int .Values.broker.externalAccess.port) }}
+  {{- $listeners = append $listeners $externalListener }}
+  {{- end -}}
+  {{- join "," $listeners -}}
+{{- end }}
+
+
+{{/*
+kafka.listeners
+
+INTERNAL://$(POD_NAME).{{ include "kafka.broker.name" . }}-headless.{{ include "kafka.namespace" . }}.svc.cluster.local:{{ .Values.broker.port }},
+EXTERNAL://$(HOST_IP):3000$(POD_INDEX)
+
+$(POD_NAME), $(HOST_IP), $(POD_INDEX) to be substituted by actual values during POD initialization in a cluster.
+*/}}
+{{- define "kafka.advertised.listeners" }}
+  {{- $listeners := list -}}
+  {{- $brokerName := include "kafka.broker.name" . }}
+  {{- $namespace := include "kafka.namespace" . -}}
+  {{- $listeners = append $listeners (printf "INTERNAL://$(POD_NAME).%s-headless.%s.svc.cluster.local:%d" $brokerName $namespace (int .Values.broker.port)) }}
+  {{- if .Values.broker.externalAccess.enabled }}
+  {{- $externalListener := printf "%s://$(HOST_IP):%d$(POD_INDEX)" .Values.broker.externalAccess.listenerProtocol (int .Values.broker.externalAccess.nodePortPrefix) }}
+  {{- $listeners = append $listeners $externalListener }}
+  {{- end -}}
+  {{- join "," $listeners -}}
+{{- end }}

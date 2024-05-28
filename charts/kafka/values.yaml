@@ -81,12 +81,33 @@ controller:
 
 
 broker:
-
   # number of brokers to create.
-  replicaCount: 2
+  replicaCount: 1
 
   # TCP port for inter-cluster communication with Kafka cluster
   port: 9092
+
+  # Configures NodePort services to expose Kafka brokers
+  externalAccess:
+    enabled: true
+
+    port: 19092
+
+    # name of listener protocol to be used for external access. Should not collide with other protocols: CONTROLLER, INTERNAL
+    listenerProtocol: EXTERNAL
+
+    # PLAINTEXT is only supported. Other options include SSL, SASL_SSL, but require additional configuration
+    kafkaProtocol: PLAINTEXT
+
+    # Given default prefix 3000, ports to be assigned to PODs would be 30000, 30001,..., 30009
+    # Thus, nodePortPrefix allows to configure up to 10 NodePort services.
+    # This is a bit hacky, but acceptable for now
+    # given Kafka is deployed as a StatefulSet (pod index becomes available at pod initialization)
+    # but advertised.listeners should be provided by that time.
+    #
+    # As K8S exposes ports from range [30000-32767] as NodePorts, prefix should be chosen accordingly.
+    nodePortPrefix: 3000
+
 
   # controller logs persistence layer. Will be mounted to PODs as KAFKA_LOG_DIRS
   # if not enabled and existingClaim is not specified, will use directories inside container.
