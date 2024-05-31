@@ -14,6 +14,7 @@ spec:
   ipFamilies:
     - IPv4
   ipFamilyPolicy: SingleStack
+  publishNotReadyAddresses: true
   ports:
     - name: tcp-broker
       port: {{ .Values.broker.port }}

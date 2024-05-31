@@ -33,7 +33,7 @@ Brokers:
   {{- end }}
   {{- $portsString := join "," $ports }}
   * Kafka is exposed on host machines on ports [{{ $portsString }}]
-  and can be accessed on any host and any port: <HOST_IP>:<PORT>
+  and can be accessed on any port: <CONTROL_PLANE_IP>:<PORT>
   {{- end }}
 
 {{ if .Values.broker.persistence.enabled }}

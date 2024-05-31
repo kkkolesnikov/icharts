@@ -150,6 +150,21 @@ broker:
 #      cpu: 250m
 #      memory: 512Mi
 
+provisioning:
+  enabled: true
+
+  default:
+    partitions: 12
+    replication: 3
+    config:
+      retention.ms: 86400000
+
+  topics:
+#    - name: my-topic
+#      partitions: 4
+#      replication: 2
+#      config:
+#        retention.ms: 3600000
 
 monitoring:
   enabled: false
