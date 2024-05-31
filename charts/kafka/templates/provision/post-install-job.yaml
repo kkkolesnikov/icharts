@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/component: kafka-provisioner
     app.kubernetes.io/part-of: kafka
-  name: {{ include "kafka.names.name" . }}
+  name: {{ include "kafka.names.name" . }}-provisioner
   namespace: {{ include "kafka.namespace" . }}
   annotations:
     helm.sh/hook: post-install,post-upgrade

@@ -1,3 +1,6 @@
+### General
+This chart is largely based on bitnami/kafka helm chart.
+
 ### Listeners configuration
 
 - each broker sets up listeners:<br>

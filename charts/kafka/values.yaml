@@ -151,7 +151,7 @@ broker:
 #      memory: 512Mi
 
 provisioning:
-  enabled: true
+  enabled: false
 
   default:
     partitions: 12
