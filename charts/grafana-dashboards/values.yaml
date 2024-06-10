@@ -1,0 +1,6 @@
+nameOverride: ""
+fullnameOverride: "grafana-dashboards"
+namespace: ""
+
+label: "grafana_dashboard"
+labelValue: "1"
